@@ -31,10 +31,11 @@ class File
      */
     public static function sanitizePath(string $path): string
     {
-        return trim(
-            preg_replace('/[^a-zA-Z0-9-_\/.%]+/', '-', Str::ascii($path)),
-            DIRECTORY_SEPARATOR . '-'
-        );
+        return $path;
+        // return trim(
+        //     preg_replace('/[^a-zA-Z0-9-_\/.%]+/', '-', Str::ascii($path)),
+        //     DIRECTORY_SEPARATOR . '-'
+        // );
     }
 
     /**
@@ -44,10 +45,11 @@ class File
      */
     public static function sanitizeFileName(string $file): string
     {
-        return trim(
-            preg_replace('/[^a-zA-Z0-9-_.%]+/', '-', Str::ascii($file)),
-            '-'
-        );
+        return $file;
+        // return trim(
+        //     preg_replace('/[^a-zA-Z0-9-_.%]+/', '-', Str::ascii($file)),
+        //     '-'
+        // );
     }
 
     /**
