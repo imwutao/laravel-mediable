@@ -21,7 +21,6 @@ use Plank\Mediable\UrlGenerators\TemporaryUrlGeneratorInterface;
 use Plank\Mediable\UrlGenerators\UrlGeneratorInterface;
 use Psr\Http\Message\StreamInterface;
 use App\Models\User;
-use Illuminate\Support\Facades\Auth;
 
 /**
  * Media Model.
@@ -93,12 +92,12 @@ class Media extends Model
         parent::boot();
 
         static::creating(function (Media $media) {
-            $media->handleMediaDeletion();
+            $media->user_id = Auth::user()->id;
         });
 
         //remove file on deletion
         static::deleted(function (Media $media) {
-            $media->user_id = Auth::user()->id;
+            $media->handleMediaDeletion();
         });
     }
 
