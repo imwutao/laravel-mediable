@@ -20,6 +20,8 @@ use Plank\Mediable\Helpers\File;
 use Plank\Mediable\UrlGenerators\TemporaryUrlGeneratorInterface;
 use Plank\Mediable\UrlGenerators\UrlGeneratorInterface;
 use Psr\Http\Message\StreamInterface;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * Media Model.
@@ -67,6 +69,7 @@ class Media extends Model
 
     protected $guarded = [
         'id',
+        'user_id',
         'disk',
         'directory',
         'filename',
@@ -89,9 +92,13 @@ class Media extends Model
     {
         parent::boot();
 
+        static::creating(function (Media $media) {
+            $media->handleMediaDeletion();
+        });
+
         //remove file on deletion
         static::deleted(function (Media $media) {
-            $media->handleMediaDeletion();
+            $media->user_id = Auth::user()->id;
         });
     }
 
@@ -562,5 +569,10 @@ class Media extends Model
     protected function getUrlGenerator(): UrlGeneratorInterface
     {
         return app('mediable.url.factory')->create($this);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

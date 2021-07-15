@@ -18,6 +18,7 @@ class CreateMediableTables extends Migration
                 'media',
                 function (Blueprint $table) {
                     $table->increments('id');
+                    $table->unsignedBigInteger('user_id')->index();
                     $table->string('disk', 32);
                     $table->string('directory');
                     $table->string('filename');
