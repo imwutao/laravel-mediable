@@ -92,10 +92,6 @@ class Media extends Model
     {
         parent::boot();
 
-        static::creating(function (Media $media) {
-            $media->user_id = Auth::user()->id;
-        });
-
         //remove file on deletion
         static::deleted(function (Media $media) {
             $media->handleMediaDeletion();

@@ -28,6 +28,7 @@ class MediaUploader
     const ON_DUPLICATE_REPLACE = 'replace';
     const ON_DUPLICATE_REPLACE_WITH_VARIANTS = 'replace_with_variants';
 
+    private $user_id;
     /**
      * @var FileSystemManager
      */
@@ -97,6 +98,13 @@ class MediaUploader
         $this->filesystem = $filesystem;
         $this->factory = $factory;
         $this->config = $config ?: config('mediable', []);
+    }
+
+    public function setUser($userId): self
+    {
+        $this->user_id = $userId;
+
+        return $this;
     }
 
     /**
@@ -583,6 +591,7 @@ class MediaUploader
         $model->mime_type = $this->verifyMimeType($this->source->mimeType());
         $model->extension = $this->verifyExtension($this->source->extension());
         $model->aggregate_type = $this->inferAggregateType($model->mime_type, $model->extension);
+        $model->user_id = $this->user_id;
 
         $model->disk = $this->disk ?: $this->config['default_disk'];
         $model->directory = $this->directory;
