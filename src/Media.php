@@ -400,7 +400,7 @@ class Media extends Model
      */
     public function stream()
     {
-        return \GuzzleHttp\Psr7\stream_for(
+        return \GuzzleHttp\Psr7\Utils::streamFor(
             $this->storage()->readStream($this->getDiskPath())
         );
     }
