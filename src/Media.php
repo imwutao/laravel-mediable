@@ -73,6 +73,7 @@ class Media extends Model
         'disk',
         'directory',
         'filename',
+        'client_original_name',
         'extension',
         'size',
         'mime_type',

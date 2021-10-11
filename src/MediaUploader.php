@@ -29,6 +29,7 @@ class MediaUploader
     const ON_DUPLICATE_REPLACE_WITH_VARIANTS = 'replace_with_variants';
 
     private $user_id;
+    private $client_original_name;
     /**
      * @var FileSystemManager
      */
@@ -103,6 +104,13 @@ class MediaUploader
     public function setUser($userId): self
     {
         $this->user_id = $userId;
+
+        return $this;
+    }
+
+    public function setClientOriginalName($clientOriginalName): self
+    {
+        $this->client_original_name = $clientOriginalName;
 
         return $this;
     }
@@ -592,6 +600,7 @@ class MediaUploader
         $model->extension = $this->verifyExtension($this->source->extension());
         $model->aggregate_type = $this->inferAggregateType($model->mime_type, $model->extension);
         $model->user_id = $this->user_id;
+        $model->client_original_name = $this->client_original_name;
 
         $model->disk = $this->disk ?: $this->config['default_disk'];
         $model->directory = $this->directory;

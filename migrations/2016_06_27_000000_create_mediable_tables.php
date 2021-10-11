@@ -22,6 +22,7 @@ class CreateMediableTables extends Migration
                     $table->string('disk', 32);
                     $table->string('directory');
                     $table->string('filename');
+                    $table->string('client_original_name')->nullable();
                     $table->string('extension', 32);
                     $table->string('mime_type', 128);
                     $table->string('aggregate_type', 32);
