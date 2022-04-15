@@ -108,6 +108,20 @@ class MediaUploader
         $this->config = $config ?: config('mediable', []);
     }
 
+    public function setUser($userId): self
+    {
+        $this->user_id = $userId;
+
+        return $this;
+    }
+
+    public function setClientOriginalName($clientOriginalName): self
+    {
+        $this->client_original_name = $clientOriginalName;
+
+        return $this;
+    }
+
     /**
      * Set the source for the file.
      *
