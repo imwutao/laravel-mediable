@@ -30,6 +30,7 @@ class MediaUploader
 
     private $user_id;
     private $client_original_name;
+    
     /**
      * @var FileSystemManager
      */
@@ -89,6 +90,12 @@ class MediaUploader
     private $before_save;
 
     /**
+     * Additional options to pass to the filesystem while uploading
+     * @var array
+     */
+    private $options = [];
+
+    /**
      * Constructor.
      * @param FilesystemManager $filesystem
      * @param SourceAdapterFactory $factory
@@ -99,20 +106,6 @@ class MediaUploader
         $this->filesystem = $filesystem;
         $this->factory = $factory;
         $this->config = $config ?: config('mediable', []);
-    }
-
-    public function setUser($userId): self
-    {
-        $this->user_id = $userId;
-
-        return $this;
-    }
-
-    public function setClientOriginalName($clientOriginalName): self
-    {
-        $this->client_original_name = $clientOriginalName;
-
-        return $this;
     }
 
     /**
@@ -364,8 +357,8 @@ class MediaUploader
     public function setTypeDefinition(string $type, array $mimeTypes, array $extensions): self
     {
         $this->config['aggregate_types'][$type] = [
-            'mime_types' => $mimeTypes,
-            'extensions' => $extensions,
+            'mime_types' => array_map('strtolower', $mimeTypes),
+            'extensions' => array_map('strtolower', $extensions),
         ];
 
         return $this;
@@ -428,6 +421,17 @@ class MediaUploader
     }
 
     /**
+     * Additional options to pass to the filesystem when uploading
+     * @param array $options
+     * @return $this
+     */
+    public function withOptions(array $options): self
+    {
+        $this->options = $options;
+        return $this;
+    }
+
+    /**
      * Determine the aggregate type of the file based on the MIME type and the extension.
      * @param  string $mimeType
      * @param  string $extension
@@ -438,6 +442,8 @@ class MediaUploader
      */
     public function inferAggregateType(string $mimeType, string $extension): string
     {
+        $mimeType = strtolower($mimeType);
+        $extension = strtolower($extension);
         $allowedTypes = $this->config['allowed_aggregate_types'] ?? [];
         $typesForMime = $this->possibleAggregateTypesForMimeType($mimeType);
         $typesForExtension = $this->possibleAggregateTypesForExtension($extension);
@@ -599,8 +605,6 @@ class MediaUploader
         $model->mime_type = $this->verifyMimeType($this->source->mimeType());
         $model->extension = $this->verifyExtension($this->source->extension());
         $model->aggregate_type = $this->inferAggregateType($model->mime_type, $model->extension);
-        $model->user_id = $this->user_id;
-        $model->client_original_name = $this->client_original_name;
 
         $model->disk = $this->disk ?: $this->config['default_disk'];
         $model->directory = $this->directory;
@@ -783,9 +787,10 @@ class MediaUploader
      */
     private function verifyMimeType(string $mimeType): string
     {
+        $mimeType = strtolower($mimeType);
         $allowed = $this->config['allowed_mime_types'] ?? [];
-        if (!empty($allowed) && !in_array(strtolower($mimeType), $allowed)) {
-            throw FileNotSupportedException::mimeRestricted(strtolower($mimeType), $allowed);
+        if (!empty($allowed) && !in_array($mimeType, $allowed)) {
+            throw FileNotSupportedException::mimeRestricted($mimeType, $allowed);
         }
 
         return $mimeType;
@@ -799,9 +804,10 @@ class MediaUploader
      */
     private function verifyExtension(string $extension): string
     {
+        $extension = strtolower($extension);
         $allowed = $this->config['allowed_extensions'] ?? [];
-        if (!empty($allowed) && !in_array(strtolower($extension), $allowed)) {
-            throw FileNotSupportedException::extensionRestricted(strtolower($extension), $allowed);
+        if (!empty($allowed) && !in_array($extension, $allowed)) {
+            throw FileNotSupportedException::extensionRestricted($extension, $allowed);
         }
 
         return $extension;
@@ -981,11 +987,20 @@ class MediaUploader
             ->put(
                 $model->getDiskPath(),
                 $stream,
-                $this->visibility
+                $this->getOptions()
             );
 
         if (is_resource($stream)) {
             fclose($stream);
         }
+    }
+
+    public function getOptions(): array
+    {
+        $options = $this->options;
+        if (!isset($options['visibility'])) {
+            $options['visibility'] = $this->visibility;
+        }
+        return $options;
     }
 }

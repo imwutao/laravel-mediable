@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Plank\Mediable;
 
 use Carbon\Carbon;
+use GuzzleHttp\Psr7\Utils;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -20,22 +21,20 @@ use Plank\Mediable\Helpers\File;
 use Plank\Mediable\UrlGenerators\TemporaryUrlGeneratorInterface;
 use Plank\Mediable\UrlGenerators\UrlGeneratorInterface;
 use Psr\Http\Message\StreamInterface;
-use App\Models\User;
-use Illuminate\Support\Facades\Auth;
 
 /**
  * Media Model.
- * @property int|string $id
- * @property string $disk
- * @property string $directory
- * @property string $filename
- * @property string $extension
- * @property string $basename
- * @property string $mime_type
- * @property string $aggregate_type
- * @property string $variant_name
- * @property int|string $original_media_id
- * @property int $size
+ * @property int|string|null $id
+ * @property string|null $disk
+ * @property string|null $directory
+ * @property string|null $filename
+ * @property string|null $extension
+ * @property string|null $basename
+ * @property string|null $mime_type
+ * @property string|null $aggregate_type
+ * @property string|null $variant_name
+ * @property int|string|null $original_media_id
+ * @property int|null $size
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property Pivot $pivot
@@ -317,7 +316,7 @@ class Media extends Model
      */
     public function getDiskPath(): string
     {
-        return ltrim(rtrim((string)$this->directory, '/') . '/' . ltrim((string)$this->basename, '/'), '/');
+        return ltrim(File::joinPathComponents((string)$this->directory, (string)$this->basename), '/');
     }
 
     /**
@@ -401,9 +400,11 @@ class Media extends Model
      */
     public function stream()
     {
-        return \GuzzleHttp\Psr7\Utils::streamFor(
-            $this->storage()->readStream($this->getDiskPath())
-        );
+        $stream = $this->storage()->readStream($this->getDiskPath());
+        if (method_exists(Utils::class, 'streamFor')) {
+            return Utils::streamFor($stream);
+        }
+        return \GuzzleHttp\Psr7\stream_for($stream);
     }
 
     /**
@@ -506,9 +507,14 @@ class Media extends Model
      * @return void
      * @throws MediaMoveException If attempting to change the file extension or a file with the same name already exists at the destination
      */
-    public function moveToDisk(string $disk, string $destination, string $filename = null): void
-    {
-        $this->getMediaMover()->moveToDisk($this, $disk, $destination, $filename);
+    public function moveToDisk(
+        string $disk,
+        string $destination,
+        string $filename = null,
+        array $options = []
+    ): void {
+        $this->getMediaMover()
+            ->moveToDisk($this, $disk, $destination, $filename, $options);
     }
 
     /**
@@ -524,9 +530,14 @@ class Media extends Model
      * @return Media
      * @throws MediaMoveException If a file with the same name already exists at the destination or it fails to copy the file
      */
-    public function copyToDisk(string $disk, string $destination, string $filename = null): self
-    {
-        return $this->getMediaMover()->copyToDisk($this, $disk, $destination, $filename);
+    public function copyToDisk(
+        string $disk,
+        string $destination,
+        string $filename = null,
+        array $options = []
+    ): self {
+        return $this->getMediaMover()
+            ->copyToDisk($this, $disk, $destination, $filename, $options);
     }
 
     protected function getMediaMover(): MediaMover
@@ -566,10 +577,5 @@ class Media extends Model
     protected function getUrlGenerator(): UrlGeneratorInterface
     {
         return app('mediable.url.factory')->create($this);
-    }
-
-    public function user()
-    {
-        return $this->belongsTo(User::class);
     }
 }

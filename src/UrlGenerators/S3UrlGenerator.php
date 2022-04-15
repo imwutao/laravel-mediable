@@ -3,9 +3,13 @@ declare(strict_types=1);
 
 namespace Plank\Mediable\UrlGenerators;
 
+use Aws\S3\S3Client;
+use Aws\S3\S3ClientInterface;
 use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Contracts\Filesystem\Cloud;
 use Illuminate\Filesystem\FilesystemManager;
+use Illuminate\Support\Arr;
+use Plank\Mediable\Helpers\File;
 
 class S3UrlGenerator extends BaseUrlGenerator implements TemporaryUrlGeneratorInterface
 {
@@ -46,12 +50,21 @@ class S3UrlGenerator extends BaseUrlGenerator implements TemporaryUrlGeneratorIn
 
     public function getTemporaryUrl(\DateTimeInterface $expiry): string
     {
-        $adapter = $this->filesystem->disk($this->media->disk)->getDriver()->getAdapter();
+        $filesystem = $this->filesystem->disk($this->media->disk);
+
+        // Laravel 9+ / Flysystem 2+
+        if (method_exists($filesystem, 'temporaryUrl')) {
+            return $filesystem->temporaryUrl($this->media->getDiskPath(), $expiry);
+        }
+
+        // Earlier versions
+        $root = config("filesystems.disks.{$this->media->disk}.root", '');
+        $adapter = $filesystem->getDriver()->getAdapter();
         $command = $adapter->getClient()->getCommand(
             'GetObject',
             [
                 'Bucket' => $adapter->getBucket(),
-                'Key' => $this->media->getDiskPath(),
+                'Key' => File::joinPathComponents($root, $this->media->getDiskPath()),
             ]
         );
 

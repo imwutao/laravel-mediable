@@ -86,6 +86,27 @@ class MediaUploaderTest extends TestCase
         );
     }
 
+    public function test_it_sets_options()
+    {
+        $uploader = $this->getUploader();
+        $this->assertEquals(
+            ['visibility' => 'public'],
+            $uploader->getOptions()
+        );
+
+        $return = $uploader->withOptions(['foo' => 'bar']);
+        $this->assertSame($return, $uploader);
+        $this->assertEquals(
+            ['visibility' => 'public', 'foo' => 'bar'],
+            $uploader->getOptions()
+        );
+        $uploader->withOptions(['visibility' => 'private']);
+        $this->assertEquals(
+            ['visibility' => 'private'],
+            $uploader->getOptions()
+        );
+    }
+
     public function test_it_can_determine_media_type_by_extension_and_mime()
     {
         $uploader = $this->getUploader();
@@ -143,6 +164,17 @@ class MediaUploaderTest extends TestCase
 
         $this->expectException(FileNotSupportedException::class);
         $uploader->inferAggregateType('text/foo', 'bar');
+    }
+
+    public function test_it_infers_type_case_insensitive()
+    {
+        $uploader = $this->getUploader();
+        $uploader->setTypeDefinition('foo', ['TeXT/foo'], ['FOo']);
+
+        $this->assertEquals(
+            'foo',
+            $uploader->inferAggregateType('tExt/fOo', 'foO'),
+        );
     }
 
     public function test_it_can_restrict_to_known_types()

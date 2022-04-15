@@ -32,10 +32,6 @@ class File
     public static function sanitizePath(string $path): string
     {
         return $path;
-        // return trim(
-        //     preg_replace('/[^a-zA-Z0-9-_\/.%]+/', '-', Str::ascii($path)),
-        //     DIRECTORY_SEPARATOR . '-'
-        // );
     }
 
     /**
@@ -46,10 +42,6 @@ class File
     public static function sanitizeFileName(string $file): string
     {
         return $file;
-        // return trim(
-        //     preg_replace('/[^a-zA-Z0-9-_.%]+/', '-', Str::ascii($file)),
-        //     '-'
-        // );
     }
 
     /**
@@ -93,5 +85,21 @@ class File
         }
 
         return null;
+    }
+
+    public static function joinPathComponents(string ...$components): string
+    {
+        $path = '';
+        foreach ($components as $component) {
+            if (empty($component)) {
+                continue;
+            }
+            if (empty($path)) {
+                $path = $component;
+                continue;
+            }
+            $path = rtrim($path, '/') . '/' . ltrim($component, '/');
+        }
+        return $path;
     }
 }
