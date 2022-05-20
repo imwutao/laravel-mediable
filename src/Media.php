@@ -21,6 +21,7 @@ use Plank\Mediable\Helpers\File;
 use Plank\Mediable\UrlGenerators\TemporaryUrlGeneratorInterface;
 use Plank\Mediable\UrlGenerators\UrlGeneratorInterface;
 use Psr\Http\Message\StreamInterface;
+use App\Models\User;
 
 /**
  * Media Model.
