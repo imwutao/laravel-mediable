@@ -578,4 +578,9 @@ class Media extends Model
     {
         return app('mediable.url.factory')->create($this);
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }
