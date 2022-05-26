@@ -623,6 +623,8 @@ class MediaUploader
         $model->disk = $this->disk ?: $this->config['default_disk'];
         $model->directory = $this->directory;
         $model->filename = $this->generateFilename();
+        $model->user_id = $this->user_id;
+        $model->client_original_name = $this->client_original_name;
 
         return $model;
     }
